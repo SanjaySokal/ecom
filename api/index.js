@@ -12,9 +12,9 @@ app.listen(4000);
 
 const connection = mysql.createConnection({
     host: "localhost",
-    user: "SanjaySokal",
-    password: "MHGPS2215G@8295",
-    database: "art",
+    user: "sokalit1_art",
+    password: "Sanjay@8295",
+    database: "sokalit1_art",
     dateStrings: true
 })
 
@@ -28,7 +28,7 @@ var trans = mailer.createTransport({
 
 const sendMail = (subject, to, message) => {
     var data = {
-        from: "contact@softingart.com",
+        from: "softingart@gmail.com",
         cc: "contact@softingart.com",
         to: to,
         subject: subject,
@@ -44,6 +44,7 @@ const sendMail = (subject, to, message) => {
         }
     })
 }
+
 
 function uploadImage(path, name, file) { file.mv(path, err => { if (!err) return 1; else return 0; }); }
 
@@ -509,7 +510,89 @@ app.get("/update-category/:id/:name/:link", (req, resp) => {
 app.post("/add-product", (req, resp) => {
     console.log(req.files.image);
     console.log(uploadImage("products/" + req.body.ramdName, req.body.imgName, req.files.image));
-    connection.query(`INSERT INTO products (name, catagory, image, price, del, desc, small) VALUES ('${req.body.name}','${req.body.category}','${req.body.ramdName}','${req.body.price}','${req.body.del}','${req.body.desc}','${req.body.small}')`, (err, data) => {
+    connection.query("INSERT INTO products (name, catagory, image, price, del, `desc`, small) VALUES" + `('${req.body.name}','${req.body.category}','${req.body.ramdName}','${req.body.price}','${req.body.del}','${req.body.desc}','${req.body.small}')`, (err, data) => {
         if (!err) { resp.send(data) } else { resp.send(err) }
     })
+})
+
+app.get("/delete-product/:id", (req, resp) => {
+    connection.query(`DELETE FROM products WHERE id = '${req.params.id}'`, (err, res) => {
+        if (!err) resp.send({ status: "success" }); else resp.send({ status: "failed" });
+    })
+})
+
+app.get("/update-product/name/:id/:name", (req, resp) => {
+    connection.query("UPDATE products SET name = '" + req.params.name + "' WHERE id = '" + req.params.id + "'", (err, res) => {
+        if (!err) resp.send({ status: "success" }); else resp.send({ status: "failed" });
+    })
+})
+
+app.get("/update-product/price/:id/:price", (req, resp) => {
+    connection.query(`UPDATE products SET price = '${req.params.price}' WHERE id = '${req.params.id}'`, (err, res) => {
+        if (!err) resp.send({ status: "success" }); else resp.send({ status: "failed" });
+    })
+})
+
+app.get("/update-product/del/:id/:del", (req, resp) => {
+    connection.query(`UPDATE products SET del = '${req.params.del}' WHERE id = '${req.params.id}'`, (err, res) => {
+        if (!err) resp.send({ status: "success" }); else resp.send({ status: "failed" });
+    })
+})
+
+app.post("/update-product/desc/:id/", (req, resp) => {
+    connection.query("UPDATE products SET `desc` = '" + req.body.desc + "' WHERE id = '" + req.params.id + "'", (err, res) => {
+        if (!err) resp.send({ status: "success" }); else resp.send({ status: err });
+    })
+})
+
+app.post("/update-product/small/:id/", (req, resp) => {
+    connection.query(`UPDATE products SET small = '${req.body.small}' WHERE id = '${req.params.id}'`, (err, res) => {
+        if (!err) resp.send({ status: "success" }); else resp.send({ status: "failed" });
+    })
+})
+
+app.get("/update-product/catagory/:id/:catagory", (req, resp) => {
+    connection.query(`UPDATE products SET catagory = '${req.params.catagory}' WHERE id = '${req.params.id}'`, (err, res) => {
+        if (!err) resp.send({ status: "success" }); else resp.send({ status: "failed" });
+    })
+})
+
+app.get("/all-orders/:search", (req, resp) => {
+    connection.query(`SELECT orders.id as orderid, orders.date, orders.status, products.id as product_id, products.name as products_name, orders.total, products.price, user.email, user.name as u_name FROM orders INNER JOIN products ON orders.product_id = products.id INNER JOIN user ON user.id = orders.email WHERE user.email LIKE '%${req.params.search}%' OR products.name LIKE '%${req.params.search}%' OR user.name LIKE '%${req.params.search}%' OR user.id LIKE '%${req.params.search}%' OR products.id LIKE '%${req.params.search}%' OR user.phone LIKE '%${req.params.search}%' OR user.pincode LIKE '%${req.params.search}%' OR user.city LIKE '%${req.params.search}%' OR user.state LIKE '%${req.params.search}%' OR orders.id LIKE '%${req.params.search}%' ORDER BY orders.id DESC;`, (err, data) => resp.send(data));
+})
+
+app.get("/cancel-order/:id", (req, resp) => {
+    connection.query(`UPDATE orders SET status = '2' WHERE id = '${req.params.id}'`, (err, data) => {
+        if (!err) resp.send({ status: "success" }); else resp.send({ status: "failed" });
+    });
+})
+
+app.get("/complete-order/:id", (req, resp) => {
+    connection.query(`UPDATE orders SET status = '1' WHERE id = '${req.params.id}'`, (err, data) => {
+        if (!err) resp.send({ status: "success" }); else resp.send({ status: "failed" });
+    });
+})
+
+app.get("/all-users/:search", (req, resp) => {
+    connection.query(`SELECT * FROM user WHERE name LIKE '%${req.params.search}%' OR email LIKE '%${req.params.search}%'`, (err, data) => {
+        if (!err) resp.send({ status: data }); else resp.send({ status: "failed" });
+    });
+})
+
+app.get("/user/:id", (req, resp) => {
+    connection.query(`SELECT * FROM user WHERE id = '${req.params.id}'`, (err, data) => {
+        if (!err) resp.send({ status: data }); else resp.send({ status: "failed" });
+    });
+})
+
+app.post("/set-user/:id", (req, resp) => {
+    connection.query(`UPDATE user SET name='${req.body.name}',phone='${req.body.phone}',address='${req.body.address}',pincode='${req.body.pincode}',city='${req.body.city}',state='${req.body.state}',type='${req.body.type}' WHERE id = '${req.params.id}'`, (err, data) => {
+        if (!err) resp.send({ status: "success" }); else resp.send({ status: "failed" });
+    });
+})
+
+app.get("/delete-users/:id", (req, resp) => {
+    connection.query(`DELETE FROM user WHERE id = '${req.params.id}'`, (err, data) => {
+        if (!err) resp.send({ status: "success" }); else resp.send({ status: "failed" });
+    });
 })
